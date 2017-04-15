@@ -8,32 +8,42 @@ import (
 )
 
 // exists returns whether the given file or directory exists or not
-func exists(path string) (bool, error) {
+func exists(path string) bool {
 	_, err := os.Stat(path)
 	if err == nil {
-		return true, nil
+		return true
 	}
 	if os.IsNotExist(err) {
-		return false, nil
+		return false
 	}
-	return true, err
+	return true
 }
 
-func linkUp(targetDir string) filepath.WalkFunc {
+func linkUp(targetDir string, sourceDir string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Print(err)
 			return nil
 		}
 
-		// If this is a directory check if it exists
-		if info.IsDir() {
-			result, _ := exists(path)
-			if !result {
-				// Create it as a symlink
-			}
+		relSourcePath, err := filepath.Rel(sourceDir, path)
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		if relSourcePath == "." {
 			return nil
+		}
+
+		targetPath := filepath.Join(targetDir, relSourcePath)
+
+		log.Println(targetPath + " ---> " + relSourcePath)
+		if !exists(targetPath) {
+			log.Println("Linking " + targetPath + " ---> " + path)
+			// err := os.Symlink(path, targetPath)
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
 		}
 
 		return nil
@@ -41,32 +51,20 @@ func linkUp(targetDir string) filepath.WalkFunc {
 }
 
 func main() {
-	// Directory to symlink
-	dir := os.Args[1]
-	fmt.Println(dir)
-
-	ex, err := os.Executable()
+	sourceDir, err := filepath.Abs(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(ex)
+	sourceDir = filepath.Clean(sourceDir)
+	fmt.Println("Sourcedir --> " + sourceDir)
 
-	// Current dir
-	exPath := filepath.Dir(ex)
-	fmt.Println(exPath)
+	pwd, err := os.Getwd()
+	targetDir := filepath.Join(pwd, "..")
+	targetDir = filepath.Clean(targetDir)
+	fmt.Println("Targetdir --> " + targetDir)
 
-	parentDir := filepath.Join(exPath, "..")
-	fmt.Println(parentDir)
-
-	err = filepath.Walk(dir, linkUp(parentDir))
+	err = filepath.Walk(sourceDir, linkUp(targetDir, sourceDir))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// target := "symtarget.txt"
-	// // os.MkdirAll(path, 0755)
-	// ioutil.WriteFile(target, []byte("Hello\n"), 0644)
-	// symlink := "symlink"
-	// error := os.Symlink(target, symlink)
-	// fmt.Println(error)
 }
