@@ -1,8 +1,17 @@
+# git
 LAST_TAG := $(shell git describe --abbrev=0 --tags)
 PREVIOUS_TAG := $(shell git describe --abbrev=0 --tags $(LAST_TAG)^)
 
-BUILD_FLAGS := -ldflags '-s -w'
+BUILD_NUMBER = $(shell git rev-list master --count)
+HASH = $(shell git rev-parse --short HEAD)
+DATE = $(shell go run tools/build-date.go)
+
+# go
+BUILD_FLAGS := -ldflags "-s -w -X main.Version=$(LAST_TAG) -X main.BuildNumber=$(BUILD_NUMBER) -X main.CommitHash=$(HASH) -X 'main.CompileDate=$(DATE)'"
+
+# github-release
 USER := blomma
+
 EXECUTABLE := viaduct
 
 UNIX_EXECUTABLES := \
@@ -42,7 +51,7 @@ bin/windows/amd64/$(EXECUTABLE).exe:
 release: clean
 	$(MAKE) $(COMPRESSED_EXECUTABLE_TARGETS)
 	git push && git push --tags
-	git log --format=%s $(PREVIOUS_TAG)..$(LAST_TAG) | \
+	git log --format="- %s" $(PREVIOUS_TAG)..$(LAST_TAG) | \
 		github-release release -u $(USER) -r $(EXECUTABLE) \
 		-t $(LAST_TAG) -n $(LAST_TAG) -d - || true
 	$(foreach FILE,$(COMPRESSED_EXECUTABLES),$(UPLOAD_CMD);)
@@ -51,7 +60,7 @@ $(EXECUTABLE):
 	go build $(BUILD_FLAGS) -o "$@"
 
 install:
-	go install
+	go install $(BUILD_FLAGS)
 
 clean:
 	rm $(EXECUTABLE) || true
