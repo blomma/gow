@@ -89,7 +89,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	sourceDir = filepath.Clean(sourceDir)
 	log.Println("Sourcedir: " + sourceDir)
 
 	// This is where we should install the files from sourceDir, it is
@@ -100,7 +99,6 @@ func main() {
 	}
 
 	targetDir := filepath.Join(currentDir, "..")
-	targetDir = filepath.Clean(targetDir)
 	log.Println("Targetdir: " + targetDir)
 
 	err = os.Chdir(targetDir)
