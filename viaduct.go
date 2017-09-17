@@ -65,15 +65,19 @@ func linkUp(targetDir string, sourceDir string) filepath.WalkFunc {
 		}
 
 		targetPath := filepath.Join(targetDir, relSourcePath)
+		relativePath, err := filepath.Rel(targetDir, path)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		if !exists(targetPath) {
-			err := os.Symlink(path, targetPath)
+			err := os.Symlink(relativePath, targetPath)
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Println("Linked: " + path + " ---> " + targetPath)
+			log.Println("Linked: " + relativePath + " ---> " + targetPath)
 		} else {
-			log.Println("Exists: " + path + " ---> " + targetPath)
+			log.Println("Exists: " + relativePath + " ---> " + targetPath)
 		}
 
 		return nil
