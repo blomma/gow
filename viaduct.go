@@ -80,9 +80,11 @@ func linkUp(targetDir string, sourceDir string) filepath.WalkFunc {
 	}
 }
 
+// TODO: A way to exclude files, or maybe just include specific files
 func main() {
 	commandLineFlags()
 
+	// This is the path that holds the dotfiles that should be installed
 	sourceDir, err := filepath.Abs(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
@@ -90,10 +92,13 @@ func main() {
 	sourceDir = filepath.Clean(sourceDir)
 	log.Println("Sourcedir: " + sourceDir)
 
+	// This is where we should install the files from sourceDir, it is
+	// hardcoded to the dir above the current dir
 	currentDir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	targetDir := filepath.Join(currentDir, "..")
 	targetDir = filepath.Clean(targetDir)
 	log.Println("Targetdir: " + targetDir)
