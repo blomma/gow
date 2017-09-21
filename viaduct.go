@@ -18,6 +18,51 @@ func exists(path string) bool {
 	return true
 }
 
+func existsAndSymlink(symLinkPath string) bool {
+	fileInfo, err := os.Lstat(symLinkPath)
+	if err != nil {
+		return false
+	}
+
+	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
+		return true
+	}
+
+	return false
+}
+
+func linkDown(targetDir string, sourceDir string) filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		relSourcePath, err := filepath.Rel(sourceDir, path)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if relSourcePath == "." {
+			return nil
+		}
+
+		targetPath := filepath.Join(targetDir, relSourcePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if existsAndSymlink(targetPath) {
+			err := os.Remove(targetPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Println("Unlinked: " + targetPath)
+		}
+
+		return nil
+	}
+}
+
 func linkUp(targetDir string, sourceDir string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -58,7 +103,7 @@ func main() {
 	commandLineFlags()
 
 	// This is the path that holds the dotfiles that should be installed
-	sourceDir, err := filepath.Abs(os.Args[1])
+	sourceDir, err := filepath.Abs(flagPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +124,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = filepath.Walk(sourceDir, linkUp(targetDir, sourceDir))
+	if *flagUnlink {
+		err = filepath.Walk(sourceDir, linkDown(targetDir, sourceDir))
+	} else {
+		err = filepath.Walk(sourceDir, linkUp(targetDir, sourceDir))
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}

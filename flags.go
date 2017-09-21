@@ -17,6 +17,8 @@ var (
 var (
 	flagVersion    = flag.Bool("v", false, "Show the version number")
 	flagVersionAll = flag.Bool("V", false, "Show full version information")
+	flagUnlink     = flag.Bool("u", false, "Unlink")
+	flagPath       = ""
 )
 
 func commandLineFlags() {
@@ -31,6 +33,13 @@ func commandLineFlags() {
 		fmt.Println("BuildNumber:", BuildNumber)
 		fmt.Println("CommitHash:", CommitHash)
 		fmt.Println("CompileDate:", CompileDate)
+		os.Exit(0)
+	}
+
+	flagPath = flag.Arg(0)
+
+	if flagPath == "" {
+		fmt.Println("Missing argument for path")
 		os.Exit(0)
 	}
 }
