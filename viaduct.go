@@ -80,13 +80,8 @@ func linkDown(targetDir string, sourceDir string) filepath.WalkFunc {
 		}
 
 		targetPath := filepath.Join(targetDir, relSourcePath)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		if existsAndSymlink(targetPath) {
-			err := os.Remove(targetPath)
-			if err != nil {
+			if err := os.Remove(targetPath); err != nil {
 				log.Fatal(err)
 			}
 			log.Println("Unlinked: " + path + " ---> " + targetPath)
@@ -123,14 +118,12 @@ func linkUp(targetDir string, sourceDir string) filepath.WalkFunc {
 
 		targetPath := filepath.Join(targetDir, relSourcePath)
 		if !exists(targetPath) {
-			err := os.Symlink(path, targetPath)
-			if err != nil {
+			if err := os.Symlink(path, targetPath); err != nil {
 				return err
 			}
 			log.Println("Linked: " + path + " ---> " + targetPath)
 		} else {
-			ferr := isFolded(targetPath, sourceDir)
-			if ferr != nil {
+			if ferr := isFolded(targetPath, sourceDir); ferr != nil {
 				return ferr
 			}
 			log.Println("Exists: " + path + " ---> " + targetPath)
@@ -142,8 +135,7 @@ func linkUp(targetDir string, sourceDir string) filepath.WalkFunc {
 
 func unfoldAndRelink(foldedDir string, dotSourceDir string, targetDir string) error {
 	log.Println("Unlinking:" + dotSourceDir + " ---> " + targetDir)
-	err := filepath.Walk(dotSourceDir, linkDown(targetDir, dotSourceDir))
-	if err != nil {
+	if err := filepath.Walk(dotSourceDir, linkDown(targetDir, dotSourceDir)); err != nil {
 		return err
 	}
 
@@ -154,14 +146,12 @@ func unfoldAndRelink(foldedDir string, dotSourceDir string, targetDir string) er
 		return err
 	}
 
-	err = os.Mkdir(foldedDir, fileInfo.Mode())
-	if err != nil {
+	if err = os.Mkdir(foldedDir, fileInfo.Mode()); err != nil {
 		return err
 	}
 
 	log.Println("Relinking:" + dotSourceDir + " ---> " + targetDir)
-	err = filepath.Walk(dotSourceDir, linkUp(targetDir, dotSourceDir))
-	return err
+	return filepath.Walk(dotSourceDir, linkUp(targetDir, dotSourceDir))
 }
 
 // TODO: A way to exclude files, or maybe just include specific files
@@ -185,8 +175,7 @@ func main() {
 	targetDir := filepath.Join(currentDir, "..")
 	log.Println("Targetdir: " + targetDir)
 
-	err = os.Chdir(targetDir)
-	if err != nil {
+	if err = os.Chdir(targetDir); err != nil {
 		log.Fatal(err)
 	}
 
@@ -200,8 +189,7 @@ func main() {
 				dotSourceDir := filepath.Join(currentDir, ferr.dot)
 
 				// We need to create the actual dir that was folded
-				err = unfoldAndRelink(ferr.foldedDir, dotSourceDir, targetDir)
-				if err != nil {
+				if err = unfoldAndRelink(ferr.foldedDir, dotSourceDir, targetDir); err != nil {
 					log.Fatal(err)
 				}
 			} else {
