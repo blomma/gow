@@ -193,20 +193,19 @@ func main() {
 	if *flagUnlink {
 		err = filepath.Walk(sourceDir, linkDown(targetDir, sourceDir))
 	} else {
-		err = filepath.Walk(sourceDir, linkUp(targetDir, sourceDir))
-		if ferr, ok := err.(*errorFoldedDirectory); ok {
-			log.Println(ferr)
-			dotSourceDir := filepath.Join(currentDir, ferr.dot)
-
-			// We need to create the actual dir that was folded
-			err = unfoldAndRelink(ferr.foldedDir, dotSourceDir, targetDir)
-			if err != nil {
-				log.Fatal(err)
-			}
-
+		for {
 			err = filepath.Walk(sourceDir, linkUp(targetDir, sourceDir))
-			if err != nil {
-				log.Fatal(err)
+			if ferr, ok := err.(*errorFoldedDirectory); ok {
+				log.Println(ferr)
+				dotSourceDir := filepath.Join(currentDir, ferr.dot)
+
+				// We need to create the actual dir that was folded
+				err = unfoldAndRelink(ferr.foldedDir, dotSourceDir, targetDir)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				break
 			}
 		}
 	}
