@@ -89,7 +89,7 @@ func linkDown(targetDir string, sourceDir string) filepath.WalkFunc {
 			if err != nil {
 				log.Fatal(err)
 			}
-			log.Println("Unlinked: " + targetPath)
+			log.Println("Unlinked: " + path + " ---> " + targetPath)
 		}
 
 		return nil
