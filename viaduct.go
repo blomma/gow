@@ -7,29 +7,30 @@ import (
 	"strings"
 )
 
-func exists(path string) bool {
+func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
-		return false
+		return false, nil
 	}
 
-	return true
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	return false, err
 }
 
-func existsAndSymlink(path string) bool {
+func existsAndSymlink(path string) (bool, error) {
 	fileInfo, err := os.Lstat(path)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-		return true
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
 func isFolded(targetPath string, sourceDir string) error {
@@ -67,12 +68,12 @@ func isFolded(targetPath string, sourceDir string) error {
 func linkDown(targetDir string, sourceDir string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		relSourcePath, err := filepath.Rel(sourceDir, path)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		if relSourcePath == "." {
@@ -80,9 +81,13 @@ func linkDown(targetDir string, sourceDir string) filepath.WalkFunc {
 		}
 
 		targetPath := filepath.Join(targetDir, relSourcePath)
-		if existsAndSymlink(targetPath) {
+		existsAndSymlink, err := existsAndSymlink(targetPath)
+		if err != nil {
+			return err
+		}
+		if existsAndSymlink {
 			if err := os.Remove(targetPath); err != nil {
-				log.Fatal(err)
+				return err
 			}
 			log.Println("Unlinked: " + path + " ---> " + targetPath)
 		}
@@ -117,14 +122,18 @@ func linkUp(targetDir string, sourceDir string) filepath.WalkFunc {
 		}
 
 		targetPath := filepath.Join(targetDir, relSourcePath)
-		if !exists(targetPath) {
+		exists, err := exists(targetPath)
+		if err != nil {
+			return err
+		}
+		if !exists {
 			if err := os.Symlink(path, targetPath); err != nil {
 				return err
 			}
 			log.Println("Linked: " + path + " ---> " + targetPath)
 		} else {
-			if ferr := isFolded(targetPath, sourceDir); ferr != nil {
-				return ferr
+			if err := isFolded(targetPath, sourceDir); err != nil {
+				return err
 			}
 			log.Println("Exists: " + path + " ---> " + targetPath)
 		}
