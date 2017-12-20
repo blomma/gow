@@ -6,19 +6,6 @@ import (
 	"path/filepath"
 )
 
-func existsAndSymlink(path string) (bool, error) {
-	fileInfo, err := os.Lstat(path)
-	if err != nil {
-		return false, err
-	}
-
-	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-		return true, nil
-	}
-
-	return false, nil
-}
-
 func Down(targetDir string, sourceDir string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -35,6 +22,7 @@ func Down(targetDir string, sourceDir string) filepath.WalkFunc {
 		}
 
 		targetPath := filepath.Join(targetDir, relSourcePath)
+		// TODO: Check that the symlink is one we own
 		existsAndSymlink, err := existsAndSymlink(targetPath)
 		if err != nil {
 			return err

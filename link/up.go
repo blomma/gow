@@ -7,17 +7,24 @@ import (
 	"strings"
 )
 
-func exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return false, nil
+func getRelPathInsideSource(targetPath string, sourceDir string) (string, error) {
+	originPath, err := os.Readlink(targetPath)
+	if err != nil {
+		return "", err
 	}
 
-	if os.IsNotExist(err) {
-		return false, nil
+	s := strings.LastIndex(sourceDir, string(os.PathSeparator))
+	relSourcePath, err := filepath.Rel(sourceDir[0:s], originPath)
+	if err != nil {
+		log.Print(err)
+		return "", err
 	}
 
-	return false, err
+	if strings.Contains(relSourcePath, "../") {
+		return "", &ErrorNotOwned{Message: "Path: " + targetPath + "is not inside sourcedir:" + sourceDir + ", it points to: " + originPath}
+	}
+
+	return relSourcePath, nil
 }
 
 func isFolded(targetPath string, sourceDir string) error {
@@ -31,21 +38,9 @@ func isFolded(targetPath string, sourceDir string) error {
 	}
 
 	// Check if we own this
-	originPath, err := os.Readlink(targetPath)
+	relSourcePath, err := getRelPathInsideSource(targetPath, sourceDir)
 	if err != nil {
 		return err
-	}
-
-	// sourcedir is always the top dir in the dotfiles folder, we strip of the last part and check
-	s := strings.LastIndex(sourceDir, string(os.PathSeparator))
-	relSourcePath, err := filepath.Rel(sourceDir[0:s], originPath)
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-
-	if strings.Contains(relSourcePath, "../") {
-		return nil
 	}
 
 	parts := strings.Split(relSourcePath, string(os.PathSeparator))

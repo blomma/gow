@@ -34,26 +34,37 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// TODO:
 	if *flag.Unlink {
 		err = filepath.Walk(sourceDir, link.Down(targetDir, sourceDir))
-	} else {
-		for {
-			err = filepath.Walk(sourceDir, link.Up(targetDir, sourceDir))
-			if ferr, ok := err.(*link.ErrorFoldedDirectory); ok {
-				log.Println(ferr)
-				dotSourceDir := filepath.Join(currentDir, ferr.Dot)
-
-				// We need to create the actual dir that was folded
-				if err = link.UnfoldAndRelink(ferr.FoldedDir, dotSourceDir, targetDir); err != nil {
-					log.Fatal(err)
-				}
-			} else {
-				break
-			}
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		return
 	}
 
-	if err != nil {
-		log.Fatal(err)
+	// Default behaviour is to link up
+	// Loop until we have succesfully linked up the dotdot without having to
+	// unfold anything
+	for {
+		err = filepath.Walk(sourceDir, link.Up(targetDir, sourceDir))
+		if ferr, ok := err.(*link.ErrorFoldedDirectory); ok {
+			log.Println(ferr)
+			dotSourceDir := filepath.Join(currentDir, ferr.Dot)
+
+			// We need to create the actual dir that was folded
+			if err = link.UnfoldAndRelink(ferr.FoldedDir, dotSourceDir, targetDir); err != nil {
+				log.Fatal(err)
+			}
+
+			continue
+		}
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		break
 	}
 }
