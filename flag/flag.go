@@ -1,4 +1,4 @@
-package main
+package flag
 
 import (
 	"flag"
@@ -15,20 +15,20 @@ var (
 )
 
 var (
-	flagVersion    = flag.Bool("v", false, "Show the version number")
-	flagVersionAll = flag.Bool("V", false, "Show full version information")
-	flagUnlink     = flag.Bool("u", false, "Unlink")
-	flagPath       = ""
+	version    = flag.Bool("v", false, "Show the version number")
+	versionAll = flag.Bool("V", false, "Show full version information")
+	Unlink     = flag.Bool("u", false, "Unlink")
+	Path       = ""
 )
 
-func commandLineFlags() {
+func Parse() {
 	flag.Parse()
-	if *flagVersion {
+	if *version {
 		fmt.Println(Version)
 		os.Exit(0)
 	}
 
-	if *flagVersionAll {
+	if *versionAll {
 		fmt.Println("Version:", Version)
 		fmt.Println("BuildNumber:", BuildNumber)
 		fmt.Println("CommitHash:", CommitHash)
@@ -36,9 +36,9 @@ func commandLineFlags() {
 		os.Exit(0)
 	}
 
-	flagPath = flag.Arg(0)
+	Path = flag.Arg(0)
 
-	if flagPath == "" {
+	if Path == "" {
 		fmt.Println("Missing argument for path")
 		os.Exit(0)
 	}

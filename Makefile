@@ -7,7 +7,7 @@ HASH = $(shell git rev-parse --short HEAD)
 DATE = $(shell go run tools/build-date.go)
 
 # go
-BUILD_FLAGS := -ldflags "-s -w -X main.Version=$(LAST_TAG) -X main.BuildNumber=$(BUILD_NUMBER) -X main.CommitHash=$(HASH) -X 'main.CompileDate=$(DATE)'"
+BUILD_FLAGS := -ldflags "-s -w -X flag.Version=$(LAST_TAG) -X flag.BuildNumber=$(BUILD_NUMBER) -X flag.CommitHash=$(HASH) -X 'flag.CompileDate=$(DATE)'"
 
 # github-release
 USER := blomma

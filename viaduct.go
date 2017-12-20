@@ -4,171 +4,17 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/blomma/viaduct/flag"
+	"github.com/blomma/viaduct/link"
 )
-
-func exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return false, nil
-	}
-
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-
-	return false, err
-}
-
-func existsAndSymlink(path string) (bool, error) {
-	fileInfo, err := os.Lstat(path)
-	if err != nil {
-		return false, err
-	}
-
-	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func isFolded(targetPath string, sourceDir string) error {
-	fileInfo, err := os.Lstat(targetPath)
-	if err != nil {
-		return err
-	}
-
-	if fileInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
-		return nil
-	}
-
-	// Check if we own this
-	originPath, err := os.Readlink(targetPath)
-	if err != nil {
-		return err
-	}
-
-	// sourcedir is always the top dir in the dotfiles folder, we strip of the last part and check
-	s := strings.LastIndex(sourceDir, string(os.PathSeparator))
-	relSourcePath, err := filepath.Rel(sourceDir[0:s], originPath)
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-
-	if strings.Contains(relSourcePath, "../") {
-		return nil
-	}
-
-	parts := strings.Split(relSourcePath, string(os.PathSeparator))
-	return &errorFoldedDirectory{message: "Found folded directory:" + targetPath, foldedDir: targetPath, dot: parts[0]}
-}
-
-func linkDown(targetDir string, sourceDir string) filepath.WalkFunc {
-	return func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		relSourcePath, err := filepath.Rel(sourceDir, path)
-		if err != nil {
-			return err
-		}
-
-		if relSourcePath == "." {
-			return nil
-		}
-
-		targetPath := filepath.Join(targetDir, relSourcePath)
-		existsAndSymlink, err := existsAndSymlink(targetPath)
-		if err != nil {
-			return err
-		}
-		if existsAndSymlink {
-			if err := os.Remove(targetPath); err != nil {
-				return err
-			}
-			log.Println("Unlinked: " + path + " ---> " + targetPath)
-		}
-
-		return nil
-	}
-}
-
-type errorFoldedDirectory struct {
-	message   string
-	dot       string
-	foldedDir string
-}
-
-func (e *errorFoldedDirectory) Error() string {
-	return e.message
-}
-
-func linkUp(targetDir string, sourceDir string) filepath.WalkFunc {
-	return func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		relSourcePath, err := filepath.Rel(sourceDir, path)
-		if err != nil {
-			return err
-		}
-
-		if relSourcePath == "." {
-			return nil
-		}
-
-		targetPath := filepath.Join(targetDir, relSourcePath)
-		exists, err := exists(targetPath)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			if err := os.Symlink(path, targetPath); err != nil {
-				return err
-			}
-			log.Println("Linked: " + path + " ---> " + targetPath)
-		} else {
-			if err := isFolded(targetPath, sourceDir); err != nil {
-				return err
-			}
-			log.Println("Exists: " + path + " ---> " + targetPath)
-		}
-
-		return nil
-	}
-}
-
-func unfoldAndRelink(foldedDir string, dotSourceDir string, targetDir string) error {
-	log.Println("Unlinking:" + dotSourceDir + " ---> " + targetDir)
-	if err := filepath.Walk(dotSourceDir, linkDown(targetDir, dotSourceDir)); err != nil {
-		return err
-	}
-
-	// Create with same perm as parent dir
-	parentDir := filepath.Join(foldedDir, "..")
-	fileInfo, err := os.Lstat(parentDir)
-	if err != nil {
-		return err
-	}
-
-	if err = os.Mkdir(foldedDir, fileInfo.Mode()); err != nil {
-		return err
-	}
-
-	log.Println("Relinking:" + dotSourceDir + " ---> " + targetDir)
-	return filepath.Walk(dotSourceDir, linkUp(targetDir, dotSourceDir))
-}
 
 // TODO: A way to exclude files, or maybe just include specific files
 func main() {
-	commandLineFlags()
+	flag.Parse()
 
 	// This is the path that holds the dotfiles that should be installed
-	sourceDir, err := filepath.Abs(flagPath)
+	sourceDir, err := filepath.Abs(flag.Path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -188,17 +34,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if *flagUnlink {
-		err = filepath.Walk(sourceDir, linkDown(targetDir, sourceDir))
+	if *flag.Unlink {
+		err = filepath.Walk(sourceDir, link.Down(targetDir, sourceDir))
 	} else {
 		for {
-			err = filepath.Walk(sourceDir, linkUp(targetDir, sourceDir))
-			if ferr, ok := err.(*errorFoldedDirectory); ok {
+			err = filepath.Walk(sourceDir, link.Up(targetDir, sourceDir))
+			if ferr, ok := err.(*link.ErrorFoldedDirectory); ok {
 				log.Println(ferr)
-				dotSourceDir := filepath.Join(currentDir, ferr.dot)
+				dotSourceDir := filepath.Join(currentDir, ferr.Dot)
 
 				// We need to create the actual dir that was folded
-				if err = unfoldAndRelink(ferr.foldedDir, dotSourceDir, targetDir); err != nil {
+				if err = link.UnfoldAndRelink(ferr.FoldedDir, dotSourceDir, targetDir); err != nil {
 					log.Fatal(err)
 				}
 			} else {
