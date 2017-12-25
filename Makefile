@@ -15,11 +15,11 @@ BUILD_FLAGS = -ldflags "-s -w \
 EXECUTABLE = viaduct
 
 UNIX_EXECUTABLES = \
-	darwin/amd64/$(EXECUTABLE) \
-	linux/amd64/$(EXECUTABLE) \
-	linux/arm/7/$(EXECUTABLE)
+	darwin-amd64-$(EXECUTABLE) \
+	linux-amd64-$(EXECUTABLE) \
+	linux-arm-7-$(EXECUTABLE)
 WIN_EXECUTABLES = \
-	windows/amd64/$(EXECUTABLE).exe
+	windows-amd64-$(EXECUTABLE).exe
 
 COMPRESSED_EXECUTABLES = \
 	$(UNIX_EXECUTABLES:%=%.tar.bz2) \
@@ -29,17 +29,17 @@ COMPRESSED_EXECUTABLE_TARGETS = $(COMPRESSED_EXECUTABLES:%=bin/%)
 all: $(EXECUTABLE)
 
 # arm
-bin/linux/arm/5/$(EXECUTABLE):
+bin/linux-arm-5-$(EXECUTABLE):
 	GOARM=5 GOARCH=arm GOOS=linux go build $(BUILD_FLAGS) -o "$@"
-bin/linux/arm/7/$(EXECUTABLE):
+bin/linux-arm-7-$(EXECUTABLE):
 	GOARM=7 GOARCH=arm GOOS=linux go build $(BUILD_FLAGS) -o "$@"
 
 # amd64
-bin/darwin/amd64/$(EXECUTABLE):
+bin/darwin-amd64-$(EXECUTABLE):
 	GOARCH=amd64 GOOS=darwin go build $(BUILD_FLAGS) -o "$@"
-bin/linux/amd64/$(EXECUTABLE):
+bin/linux-amd64-$(EXECUTABLE):
 	GOARCH=amd64 GOOS=linux go build $(BUILD_FLAGS) -o "$@"
-bin/windows/amd64/$(EXECUTABLE).exe:
+bin/windows-amd64-$(EXECUTABLE).exe:
 	GOARCH=amd64 GOOS=windows go build $(BUILD_FLAGS) -o "$@"
 
 %.tar.bz2: %
