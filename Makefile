@@ -1,30 +1,30 @@
-# git
-LAST_TAG := $(shell git describe --abbrev=0 --tags)
-PREVIOUS_TAG := $(shell git describe --abbrev=0 --tags $(LAST_TAG)^)
+# build variables
+LAST_TAG 		= $(shell git describe --abbrev=0 --tags)
+PREVIOUS_TAG 	= $(shell git describe --abbrev=0 --tags $(LAST_TAG)^)
+BUILD_NUMBER 	= $(shell git rev-list master --count)
+HASH 			= $(shell git rev-parse --short HEAD)
+DATE 			= $(shell go run tools/build-date.go)
 
-BUILD_NUMBER = $(shell git rev-list master --count)
-HASH = $(shell git rev-parse --short HEAD)
-DATE = $(shell go run tools/build-date.go)
+# build flags
+BUILD_FLAGS = -ldflags "-s -w \
+	-X github.com/blomma/viaduct/flag.Version=$(LAST_TAG) \
+	-X github.com/blomma/viaduct/flag.BuildNumber=$(BUILD_NUMBER) \
+	-X github.com/blomma/viaduct/flag.CommitHash=$(HASH) \
+	-X 'github.com/blomma/viaduct/flag.CompileDate=$(DATE)'"
 
-# go
-BUILD_FLAGS := -ldflags "-s -w -X github.com/blomma/viaduct/flag.Version=$(LAST_TAG) -X github.com/blomma/viaduct/flag.BuildNumber=$(BUILD_NUMBER) -X github.com/blomma/viaduct/flag.CommitHash=$(HASH) -X 'github.com/blomma/viaduct/flag.CompileDate=$(DATE)'"
+EXECUTABLE = viaduct
 
-# github-release
-USER := blomma
-
-EXECUTABLE := viaduct
-
-UNIX_EXECUTABLES := \
+UNIX_EXECUTABLES = \
 	darwin/amd64/$(EXECUTABLE) \
 	linux/amd64/$(EXECUTABLE) \
 	linux/arm/7/$(EXECUTABLE)
-WIN_EXECUTABLES := \
+WIN_EXECUTABLES = \
 	windows/amd64/$(EXECUTABLE).exe
 
-COMPRESSED_EXECUTABLES = $(UNIX_EXECUTABLES:%=%.tar.bz2) $(WIN_EXECUTABLES:%.exe=%.zip)
+COMPRESSED_EXECUTABLES = \
+	$(UNIX_EXECUTABLES:%=%.tar.bz2) \
+	$(WIN_EXECUTABLES:%.exe=%.zip)
 COMPRESSED_EXECUTABLE_TARGETS = $(COMPRESSED_EXECUTABLES:%=bin/%)
-
-UPLOAD_CMD = github-release upload -u $(USER) -r $(EXECUTABLE) -t $(LAST_TAG) -n $(subst /,-,$(FILE)) -f bin/$(FILE)
 
 all: $(EXECUTABLE)
 
@@ -47,17 +47,15 @@ bin/windows/amd64/$(EXECUTABLE).exe:
 %.zip: %.exe
 	zip "$@" "$<"
 
+$(EXECUTABLE):
+	go build $(BUILD_FLAGS) -o "$@"
+
+release-notes:
+	git log --format="- %s" $(PREVIOUS_TAG)..$(LAST_TAG)
+
 # git tag -a v$(RELEASE) -m 'release $(RELEASE)'
 release: clean
 	$(MAKE) $(COMPRESSED_EXECUTABLE_TARGETS)
-	git push && git push --tags
-	git log --format="- %s" $(PREVIOUS_TAG)..$(LAST_TAG) | \
-		github-release release -u $(USER) -r $(EXECUTABLE) \
-		-t $(LAST_TAG) -n $(LAST_TAG) -d - || true
-	$(foreach FILE,$(COMPRESSED_EXECUTABLES),$(UPLOAD_CMD);)
-
-$(EXECUTABLE):
-	go build $(BUILD_FLAGS) -o "$@"
 
 install:
 	go install $(BUILD_FLAGS)
