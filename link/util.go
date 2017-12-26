@@ -18,7 +18,7 @@ func existsAndSymlink(path string) (bool, error) {
 func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
-		return false, nil
+		return true, nil
 	}
 
 	if os.IsNotExist(err) {
