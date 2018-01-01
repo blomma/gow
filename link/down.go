@@ -22,15 +22,20 @@ func Down(targetDir string, sourceDir string) filepath.WalkFunc {
 		}
 
 		targetPath := filepath.Join(targetDir, relSourcePath)
+
 		// TODO: Check that the symlink is one we own
-		existsAndSymlink, err := existsAndSymlink(targetPath)
-		if err != nil {
+		fileInfo, err := os.Lstat(targetPath)
+
+		// The only acceptable error is if the file does not exist
+		if err != nil && !os.IsNotExist(err) {
 			return err
 		}
-		if existsAndSymlink {
+
+		if err == nil && fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 			if err := os.Remove(targetPath); err != nil {
 				return err
 			}
+
 			log.Println("Unlinked: " + path + " ---> " + targetPath)
 		}
 
