@@ -7,6 +7,19 @@ import (
 	"strings"
 )
 
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	return false, err
+}
+
 func getRelPathInsideSource(targetPath string, sourceDir string) (string, error) {
 	originPath, err := os.Readlink(targetPath)
 	if err != nil {
