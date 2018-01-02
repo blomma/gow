@@ -34,7 +34,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// TODO:
 	if *flag.Unlink {
 		err = filepath.Walk(sourceDir, link.Down(targetDir, sourceDir))
 		if err != nil {
