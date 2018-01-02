@@ -18,6 +18,7 @@ var (
 	version    = flag.Bool("v", false, "Show the version number")
 	versionAll = flag.Bool("V", false, "Show full version information")
 	Unlink     = flag.Bool("u", false, "Unlink")
+	Target     = flag.String("t", "", "Targetpath, default is directory above .dotfiles")
 	Path       = ""
 )
 

@@ -28,6 +28,9 @@ func main() {
 	}
 
 	targetDir := filepath.Join(currentDir, "..")
+	if *flag.Target != "" {
+		targetDir = *flag.Target
+	}
 	log.Println("Targetdir: " + targetDir)
 
 	if err = os.Chdir(targetDir); err != nil {
