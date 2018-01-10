@@ -46,6 +46,10 @@ func isFolded(targetPath string, sourceDir string) error {
 		return err
 	}
 
+	if (fileInfo.Mode()&os.ModeDir != os.ModeDir) {
+		return nil
+	}
+
 	if fileInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
 		return nil
 	}
