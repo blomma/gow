@@ -32,7 +32,7 @@ type Options struct {
 }
 
 // Parse parses options passed to the program
-func Parse() Options {
+func (o *Options) Parse() {
 	flag.Parse()
 	if *version {
 		fmt.Println(Version)
@@ -54,10 +54,9 @@ func Parse() Options {
 		os.Exit(0)
 	}
 
-	return Options{
-		Path:       path,
-		Target:     *target,
-		Unlink:     *unlink,
-		Version:    *version,
-		VersionAll: *versionAll}
+	o.Path = path
+	o.Target = *target
+	o.Unlink = *unlink
+	o.Version = *version
+	o.VersionAll = *versionAll
 }

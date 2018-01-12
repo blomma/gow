@@ -11,7 +11,8 @@ import (
 
 // TODO: A way to exclude files, or maybe just include specific files
 func main() {
-	var options = options.Parse()
+	var options = options.Options{}
+	options.Parse()
 
 	// This is the path that holds the dotfiles that should be installed
 	sourceDir, err := filepath.Abs(options.Path)
