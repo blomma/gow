@@ -15,10 +15,10 @@ var (
 )
 
 var (
-	version    = flag.Bool("v", false, "Show the version number")
-	versionAll = flag.Bool("V", false, "Show full version information")
-	unlink     = flag.Bool("u", false, "Unlink")
-	target     = flag.String("t", "..", "Targetpath, default is directory above .dotfiles")
+	version    = *flag.Bool("v", false, "Show the version number")
+	versionAll = *flag.Bool("V", false, "Show full version information")
+	unlink     = *flag.Bool("u", false, "Unlink")
+	target     = *flag.String("t", "..", "Targetpath, default is directory above .dotfiles")
 	path       = ""
 )
 
@@ -34,12 +34,12 @@ type Options struct {
 // Parse parses options passed to the program
 func (o *Options) Parse() {
 	flag.Parse()
-	if *version {
+	if version {
 		fmt.Println(Version)
 		os.Exit(0)
 	}
 
-	if *versionAll {
+	if versionAll {
 		fmt.Println("Version:", Version)
 		fmt.Println("BuildNumber:", BuildNumber)
 		fmt.Println("CommitHash:", CommitHash)
@@ -55,8 +55,8 @@ func (o *Options) Parse() {
 	}
 
 	o.Path = path
-	o.Target = *target
-	o.Unlink = *unlink
-	o.Version = *version
-	o.VersionAll = *versionAll
+	o.Target = target
+	o.Unlink = unlink
+	o.Version = version
+	o.VersionAll = versionAll
 }
