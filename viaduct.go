@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 
 	"github.com/blomma/viaduct/link"
-	"github.com/blomma/viaduct/options"
+	"github.com/blomma/viaduct/option"
 )
 
 // TODO: A way to exclude files, or maybe just include specific files
 func main() {
-	var options = options.Options{}
+	var options = option.Options{}
 	options.Parse()
 
 	// This is the path that holds the dotfiles that should be installed
