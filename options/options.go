@@ -1,4 +1,4 @@
-package flag
+package options
 
 import (
 	"flag"
@@ -17,12 +17,22 @@ var (
 var (
 	version    = flag.Bool("v", false, "Show the version number")
 	versionAll = flag.Bool("V", false, "Show full version information")
-	Unlink     = flag.Bool("u", false, "Unlink")
-	Target     = flag.String("t", "", "Targetpath, default is directory above .dotfiles")
-	Path       = ""
+	unlink     = flag.Bool("u", false, "Unlink")
+	target     = flag.String("t", "..", "Targetpath, default is directory above .dotfiles")
+	path       = ""
 )
 
-func Parse() {
+// Options holds options passed to the program
+type Options struct {
+	Version    bool
+	VersionAll bool
+	Unlink     bool
+	Target     string
+	Path       string
+}
+
+// Parse parses options passed to the program
+func Parse() Options {
 	flag.Parse()
 	if *version {
 		fmt.Println(Version)
@@ -37,10 +47,17 @@ func Parse() {
 		os.Exit(0)
 	}
 
-	Path = flag.Arg(0)
+	path = flag.Arg(0)
 
-	if Path == "" {
+	if path == "" {
 		fmt.Println("Missing argument for path")
 		os.Exit(0)
 	}
+
+	return Options{
+		Path:       path,
+		Target:     *target,
+		Unlink:     *unlink,
+		Version:    *version,
+		VersionAll: *versionAll}
 }
