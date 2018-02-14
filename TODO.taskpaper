@@ -1,0 +1,13 @@
+Feature:
+	- Add platform specific locations, so the same file can wind up in different locations depending on platform
+		Maybe file with mappings named mapping.json
+			{
+				file: {
+					name: "test.txt",
+					targets: {
+						window: "%APPDATA%\Code\User\settings.json",
+						mac: "Library/Application Support/Code/User/settings.json"
+					}
+				}
+			}
+		what this does is copy name to location of each target
