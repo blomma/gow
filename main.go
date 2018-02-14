@@ -45,8 +45,8 @@ func main() {
 		return
 	}
 
-	// Default behaviour is to link up
-	// Loop until we have succesfully linked up the dot without having to
+	// Default behavior is to link up
+	// Loop until we have successfully linked up the dot without having to
 	// unfold anything
 	for {
 		err = filepath.Walk(sourceDir, link.Up(targetDir, sourceDir))
