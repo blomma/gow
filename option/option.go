@@ -14,32 +14,29 @@ var (
 	CompileDate = "Unknown"
 )
 
-var (
-	version    = *flag.Bool("v", false, "Show the version number")
-	versionAll = *flag.Bool("V", false, "Show full version information")
-	unlink     = *flag.Bool("u", false, "Unlink")
-	target     = *flag.String("t", "..", "Targetpath, default is directory above .dotfiles")
-	path       = ""
-)
-
 // Options holds options passed to the program
 type Options struct {
-	Version    bool
-	VersionAll bool
-	Unlink     bool
-	Target     string
-	Path       string
+	Unlink bool
+	Target string
+	Path   string
 }
 
 // Parse parses options passed to the program
 func (o *Options) Parse() {
+	var version = flag.Bool("v", false, "Show the version number")
+	var versionAll = flag.Bool("V", false, "Show the full version information")
+
+	flag.BoolVar(&o.Unlink, "u", false, "Unlink")
+	flag.StringVar(&o.Target, "t", "..", "Targetpath, default is directory above .dotfiles")
+
 	flag.Parse()
-	if version {
+
+	if *version {
 		fmt.Println(Version)
 		os.Exit(0)
 	}
 
-	if versionAll {
+	if *versionAll {
 		fmt.Println("Version:", Version)
 		fmt.Println("BuildNumber:", BuildNumber)
 		fmt.Println("CommitHash:", CommitHash)
@@ -47,16 +44,10 @@ func (o *Options) Parse() {
 		os.Exit(0)
 	}
 
-	path = flag.Arg(0)
+	o.Path = flag.Arg(0)
 
-	if path == "" {
+	if o.Path == "" {
 		fmt.Println("Missing argument for path")
 		os.Exit(0)
 	}
-
-	o.Path = path
-	o.Target = target
-	o.Unlink = unlink
-	o.Version = version
-	o.VersionAll = versionAll
 }

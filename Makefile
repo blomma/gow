@@ -7,10 +7,10 @@ DATE 			= $(shell go run tools/build-date.go)
 
 # build flags
 BUILD_FLAGS = -ldflags "-s -w \
-	-X github.com/blomma/viaduct/flag.Version=$(LAST_TAG) \
-	-X github.com/blomma/viaduct/flag.BuildNumber=$(BUILD_NUMBER) \
-	-X github.com/blomma/viaduct/flag.CommitHash=$(HASH) \
-	-X 'github.com/blomma/viaduct/flag.CompileDate=$(DATE)'"
+	-X github.com/blomma/viaduct/option.Version=$(LAST_TAG) \
+	-X github.com/blomma/viaduct/option.BuildNumber=$(BUILD_NUMBER) \
+	-X github.com/blomma/viaduct/option.CommitHash=$(HASH) \
+	-X 'github.com/blomma/viaduct/option.CompileDate=$(DATE)'"
 
 EXECUTABLE = viaduct
 
