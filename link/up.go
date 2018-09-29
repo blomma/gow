@@ -29,7 +29,6 @@ func getRelPathInsideSource(targetPath string, sourceDir string) (string, error)
 	s := strings.LastIndex(sourceDir, string(os.PathSeparator))
 	relSourcePath, err := filepath.Rel(sourceDir[0:s], originPath)
 	if err != nil {
-		log.Print(err)
 		return "", err
 	}
 
@@ -46,15 +45,26 @@ func isFolded(targetPath string, sourceDir string) error {
 		return err
 	}
 
-	if (fileInfo.Mode()&os.ModeDir != os.ModeDir) {
-		return nil
-	}
-
+	// A folded dir must be a symlink
 	if fileInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
 		return nil
 	}
 
-	// Check if we own this
+	originPath, err := os.Readlink(targetPath)
+	if err != nil {
+		return err
+	}
+
+	originFileInfo, err := os.Lstat(originPath)
+	if err != nil {
+		return err
+	}
+
+	// A folded dir must be a dir
+	if originFileInfo.Mode()&os.ModeDir != os.ModeDir {
+		return nil
+	}
+
 	relSourcePath, err := getRelPathInsideSource(targetPath, sourceDir)
 	if err != nil {
 		return err
@@ -84,6 +94,7 @@ func Up(targetDir string, sourceDir string) filepath.WalkFunc {
 		if err != nil {
 			return err
 		}
+
 		if !exists {
 			if err := os.Symlink(path, targetPath); err != nil {
 				return err
