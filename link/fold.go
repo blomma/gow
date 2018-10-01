@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 )
 
+// UnfoldAndRelink unlinks foldedDir and relinks the given dot
 func UnfoldAndRelink(foldedDir string, dotSourceDir string, targetDir string) error {
 	log.Println("Unlinking:" + dotSourceDir + " ---> " + targetDir)
 	if err := filepath.Walk(dotSourceDir, Down(targetDir, dotSourceDir)); err != nil {

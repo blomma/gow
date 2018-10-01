@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 )
 
+// Down unlinks anything it can find in targetDir
 func Down(targetDir string, sourceDir string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {

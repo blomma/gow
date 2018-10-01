@@ -74,6 +74,7 @@ func isFolded(targetPath string, sourceDir string) error {
 	return &ErrorFoldedDirectory{Message: "Found folded directory:" + targetPath, FoldedDir: targetPath, Dot: parts[0]}
 }
 
+// Up symlinks anything it can find into targetDir
 func Up(targetDir string, sourceDir string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
