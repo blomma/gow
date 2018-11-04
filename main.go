@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/blomma/viaduct/link"
@@ -15,16 +14,11 @@ func main() {
 	options.Parse()
 
 	// This is the path that holds the dotfiles that should be installed
-	sourceDir, err := filepath.Abs(options.Path)
+	dotSourceDir, err := filepath.Abs(options.Path)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Sourcedir: " + sourceDir)
-
-	dotDir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.Println("Sourcedir: " + dotSourceDir)
 
 	targetDir, err := filepath.Abs(options.Target)
 	if err != nil {
@@ -32,12 +26,8 @@ func main() {
 	}
 	log.Println("Targetdir: " + targetDir)
 
-	if err = os.Chdir(targetDir); err != nil {
-		log.Fatal(err)
-	}
-
 	if options.Unlink {
-		err = filepath.Walk(sourceDir, link.Down(targetDir, sourceDir))
+		err = filepath.Walk(dotSourceDir, link.Down(targetDir, dotSourceDir))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -49,13 +39,13 @@ func main() {
 	// Loop until we have successfully linked up the dot without having to
 	// unfold anything
 	for {
-		err = filepath.Walk(sourceDir, link.Up(targetDir, sourceDir))
+		err = filepath.Walk(dotSourceDir, link.Up(targetDir, dotSourceDir))
 		if ferr, ok := err.(*link.ErrorFoldedDirectory); ok {
-			log.Println(ferr)
-			dotSourceDir := filepath.Join(dotDir, ferr.Dot)
+			dotDir := filepath.Join(dotSourceDir, "..")
+			foldedDotSourceDir := filepath.Join(dotDir, ferr.Dot)
 
 			// We need to create the actual dir that was folded
-			if err = link.UnfoldAndRelink(ferr.FoldedDir, dotSourceDir, targetDir); err != nil {
+			if err = link.UnfoldAndRelink(ferr.FoldedDir, foldedDotSourceDir, targetDir); err != nil {
 				log.Fatal(err)
 			}
 
